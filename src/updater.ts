@@ -50,17 +50,18 @@ export function initUpdater(onChange: (s: UpdateState) => void): void {
 
 function friendly(e: Error): string {
   const m = String(e?.message ?? e);
-  if (/401|403|404|Not Found|Bad credentials/i.test(m)) return "Нет доступа к репозиторию: проверьте токен GitHub.";
+  if (/401|403|404|Not Found|Bad credentials/i.test(m)) return "Нет доступа к репозиторию обновлений (он приватный или токен неверный).";
   if (/ENOTFOUND|ECONNREFUSED|ETIMEDOUT|ENETUNREACH|net::/i.test(m)) return "Нет связи с GitHub.";
   return m.split("\n")[0].slice(0, 200);
 }
 
 export async function checkForUpdates(s: Settings): Promise<void> {
   if (!app.isPackaged) return set({ kind: "error", message: "Обновления работают только в установленной версии." });
-  if (!s.githubToken.trim()) return set({ kind: "error", message: "Укажите токен GitHub, чтобы проверять обновления." });
   const repo = readRepo();
   if (!repo) return set({ kind: "error", message: "Не найден адрес репозитория обновлений." });
-  autoUpdater.setFeedURL({ provider: "github", ...repo, private: true, token: s.githubToken.trim() });
+  // Without a token the repo is treated as public; the token is only needed while it is private.
+  const token = s.githubToken.trim();
+  autoUpdater.setFeedURL(token ? { provider: "github", ...repo, private: true, token } : { provider: "github", ...repo });
   try {
     await autoUpdater.checkForUpdates();
   } catch {
@@ -72,7 +73,7 @@ export async function checkForUpdates(s: Settings): Promise<void> {
 export function scheduleUpdates(getSettings: () => Settings): void {
   clearInterval(timer);
   const run = () => {
-    if (getSettings().autoUpdate && getSettings().githubToken.trim()) checkForUpdates(getSettings());
+    if (getSettings().autoUpdate) checkForUpdates(getSettings());
   };
   setTimeout(run, 10_000);
   timer = setInterval(run, 4 * 60 * 60 * 1000);

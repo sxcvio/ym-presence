@@ -162,7 +162,7 @@ function build() {
     sw("closeToTray", "Крестик сворачивает в трей", "Иначе закрывает программу полностью");
   $("f-upd").innerHTML =
     sw("autoUpdate", "Проверять обновления автоматически", "При запуске и раз в 4 часа") +
-    `<div class="field"><label>Токен GitHub</label><input type="password" data-k="githubToken" placeholder="github_pat_…"><small>Репозиторий приватный, поэтому нужен токен только на чтение (fine-grained, право Contents: Read-only). Хранится только в файле настроек на этом компьютере.</small></div>`;
+    `<details class="field"><summary style="cursor:pointer;color:var(--muted)">Для приватного репозитория</summary><div style="margin-top:8px"><label>Токен GitHub</label><input type="password" data-k="githubToken" placeholder="github_pat_…"><small>Нужен, только пока репозиторий приватный (fine-grained, право Contents: Read-only). Хранится только в файле настроек на этом компьютере. Для публичного репозитория оставьте пустым.</small></div></details>`;
   $("chips").innerHTML = ["title", "artist", "album", "url", "duration", "position"].map((v) => `<button class="chip" data-v="{${v}}">{${v}}</button>`).join("");
 
   document.querySelectorAll("[data-k]").forEach((el) => {
