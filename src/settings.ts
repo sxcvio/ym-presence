@@ -53,7 +53,7 @@ export const defaults: Settings = {
   state: "{artist}",
   stateUrl: "",
   showCover: true,
-  uploadCovers: false,
+  uploadCovers: true,
   fallbackImage: "logo",
   largeText: "{album}",
   coverUrl: "",

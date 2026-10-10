@@ -1,6 +1,21 @@
 import { spawn, ChildProcess } from "child_process";
 import { EventEmitter } from "events";
+import fs from "fs";
+import os from "os";
+import path from "path";
 import readline from "readline";
+
+const THUMB_DIR = path.join(os.tmpdir(), "ym-presence-thumbs");
+
+/** Covers handed over by Yandex Music are cached here as small temp files; keep only the newest `keep`. */
+export function pruneThumbs(keep = 0, except = ""): void {
+  try {
+    const files = fs.readdirSync(THUMB_DIR).map((f) => ({ f, t: fs.statSync(path.join(THUMB_DIR, f)).mtimeMs })).sort((a, b) => b.t - a.t);
+    for (const { f } of files.slice(keep)) if (path.join(THUMB_DIR, f) !== except) fs.rmSync(path.join(THUMB_DIR, f), { force: true });
+  } catch {
+    /* directory may not exist yet */
+  }
+}
 
 export interface Track {
   title: string;
@@ -22,6 +37,7 @@ export interface TrackerState {
 export class Tracker extends EventEmitter {
   private proc?: ChildProcess;
   private stopped = false;
+  private lastThumb = "";
 
   constructor(private scriptPath: string) {
     super();
@@ -36,6 +52,10 @@ export class Tracker extends EventEmitter {
       try {
         const j = JSON.parse(line);
         const sessions: string[] = j.sessions ?? [];
+        if (j.thumb && j.thumb !== this.lastThumb) {
+          this.lastThumb = j.thumb;
+          pruneThumbs(20, j.thumb);
+        }
         const track: Track | null = j.title
           ? {
               title: j.title,

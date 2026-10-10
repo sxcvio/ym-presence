@@ -2,7 +2,7 @@ import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, shell } from "ele
 import path from "path";
 import { Presence, SAMPLE_TRACK, buildActivity } from "./presence";
 import { Settings, loadSettings, merge, saveSettings } from "./settings";
-import { Tracker, TrackerState } from "./tracker";
+import { Tracker, TrackerState, pruneThumbs } from "./tracker";
 import { checkForUpdates, getUpdateState, initUpdater, installUpdate, scheduleUpdates } from "./updater";
 import { lookup } from "./yandex";
 
@@ -128,6 +128,7 @@ app.whenReady().then(() => {
     last = st;
     refresh();
   });
+  pruneThumbs(0); // leftovers from a previous run
   tracker.start();
   if (!settings.startMinimized) openWindow();
 });
@@ -138,5 +139,6 @@ app.on("window-all-closed", () => {
 app.on("before-quit", () => {
   quitting = true;
   tracker.stop();
+  pruneThumbs(0);
   presence.destroy();
 });

@@ -1,6 +1,6 @@
 {
   "name": "ym-discord-rpc",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Yandex Music → Discord Rich Presence",
   "main": "dist/main.js",
   "scripts": {
