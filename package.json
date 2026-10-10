@@ -1,6 +1,6 @@
 {
   "name": "ym-discord-rpc",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Yandex Music → Discord Rich Presence",
   "main": "dist/main.js",
   "scripts": {
@@ -36,7 +36,7 @@
       "scripts/smtc.ps1"
     ],
     "afterPack": "scripts/after-pack.js",
-    "publish": { "provider": "github", "owner": "sxcvio", "repo": "ym-presence", "private": true, "releaseType": "draft" },
+    "publish": { "provider": "github", "owner": "sxcvio", "repo": "ym-presence", "releaseType": "draft" },
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico",
