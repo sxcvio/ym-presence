@@ -43,13 +43,10 @@ function openWindow(): void {
     shell.openExternal(url);
     return { action: "deny" };
   });
-  win.on("close", (e) => {
-    if (!quitting && settings.closeToTray) {
-      e.preventDefault();
-      win?.hide();
-    }
+  win.on("closed", () => {
+    win = null;
+    if (!quitting && !settings.closeToTray) app.quit();
   });
-  win.on("closed", () => (win = null));
 }
 
 function applyAutoStart(): void {
@@ -104,6 +101,9 @@ function update(s: Settings): void {
   buildTrayMenu();
   refresh();
 }
+
+// The UI is a few forms; the GPU process would cost ~50 MB for nothing.
+app.disableHardwareAcceleration();
 
 app.whenReady().then(() => {
   if (!app.requestSingleInstanceLock()) return app.quit();

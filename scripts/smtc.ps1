@@ -35,9 +35,9 @@ function Save-Thumb($props, $key) {
 }
 
 $mgr = Await ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager]::RequestAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager])
-$lastKey = ''; $thumb = $null; $tries = 0
+$lastKey = ''; $thumb = $null; $tries = 0; $lastSig = ''
 while ($true) {
-  $out = $null; $ids = @()
+  $out = $null; $ids = @(); $anchor = 0
   try {
     $sessions = $mgr.GetSessions()
     $s = $sessions | Where-Object { $_.SourceAppUserModelId -match $pattern } | Select-Object -First 1
@@ -51,6 +51,7 @@ while ($true) {
         $pos += ([DateTimeOffset]::UtcNow - $t.LastUpdatedTime).TotalSeconds
         if ($pos -gt $t.EndTime.TotalSeconds) { $pos = $t.EndTime.TotalSeconds }
       }
+      $anchor = [math]::Round(($t.LastUpdatedTime.ToUnixTimeMilliseconds() / 1000 - $t.Position.TotalSeconds) / 2)
       $key = "$($p.Artist)|$($p.Title)"
       if ($key -ne $lastKey) { $lastKey = $key; $thumb = $null; $tries = 0 }
       if (-not $thumb -and $tries -lt 6) {
@@ -65,6 +66,11 @@ while ($true) {
     }
   } catch { $out = @{ error = $_.Exception.Message } }
   if ($null -eq $out) { $out = @{ none = $true; sessions = @($ids) } }
-  [Console]::Out.WriteLine(($out | ConvertTo-Json -Compress)); [Console]::Out.Flush()
+  # Emit only when something changed (track, state, cover, seek); the app extrapolates the position itself.
+  $sig = (($out.Keys | Where-Object { $_ -ne 'position' } | ForEach-Object { "$($out[$_])" }) -join '|') + "|$anchor"
+  if ($sig -ne $lastSig) {
+    $lastSig = $sig
+    [Console]::Out.WriteLine(($out | ConvertTo-Json -Compress)); [Console]::Out.Flush()
+  }
   Start-Sleep -Milliseconds 1000
 }
