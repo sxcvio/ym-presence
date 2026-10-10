@@ -1,0 +1,50 @@
+{
+  "name": "ym-discord-rpc",
+  "version": "0.1.0",
+  "description": "Yandex Music → Discord Rich Presence",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && electron .",
+    "dist": "tsc && electron-builder",
+    "release": "tsc && electron-builder --publish always"
+  },
+  "dependencies": {
+    "@xhayper/discord-rpc": "^1.2.0",
+    "electron-updater": "^6.8.9"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "typescript": "^5.6.0"
+  },
+  "build": {
+    "appId": "local.ym.discord.rpc",
+    "directories": {
+      "output": "release"
+    },
+    "productName": "YM Presence",
+    "files": [
+      "dist/**",
+      "ui/**",
+      "assets/**",
+      "scripts/smtc.ps1",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "scripts/smtc.ps1"
+    ],
+    "afterPack": "scripts/after-pack.js",
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "YM Presence"
+    }
+  }
+}

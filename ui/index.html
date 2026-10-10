@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>YM Presence</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: https: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<style>
+  :root{--bg:#1e1f22;--panel:#2b2d31;--panel2:#313338;--text:#dbdee1;--muted:#949ba4;--accent:#ffcc00;--ok:#23a559;--bad:#f23f43;--line:#3f4147}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px "Segoe UI",sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
+  nav{width:210px;background:#17181a;padding:16px 10px;display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;padding:4px 10px 16px}
+  .brand img{width:30px;height:30px;border-radius:8px}
+  nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:6px;color:var(--muted)}
+  nav button:hover{background:var(--panel);color:var(--text)}
+  nav button.on{background:var(--panel2);color:#fff}
+  nav .sp{flex:1}
+  .conn{padding:10px 12px;font-size:12px;color:var(--muted)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:6px}
+  .dot.on{background:var(--ok)}
+  main{flex:1;display:flex;min-width:0}
+  .content{flex:1;overflow:auto;padding:24px 28px}
+  aside{width:340px;border-left:1px solid var(--line);padding:24px 20px;overflow:auto;flex-shrink:0}
+  h1{font-size:20px;margin:0 0 4px} h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:24px 0 8px}
+  .sub{color:var(--muted);margin-bottom:16px}
+  .tab{display:none}.tab.on{display:block}
+  .card{background:var(--panel);border-radius:8px;padding:6px 16px;margin-bottom:12px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row .l{flex:1}.row .l small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+  .field{padding:10px 0;border-bottom:1px solid var(--line)}.field:last-child{border-bottom:0}
+  .field label{display:block;margin-bottom:6px}.field small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+  input[type=text],select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit}
+  input[type=text]:focus,select:focus{outline:none;border-color:var(--accent)}
+  .sw{position:relative;width:40px;height:22px;flex-shrink:0}
+  .sw input{opacity:0;width:100%;height:100%;margin:0;position:absolute;cursor:pointer;z-index:1}
+  .sw span{position:absolute;inset:0;background:#4e5058;border-radius:11px;transition:.15s}
+  .sw span:after{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
+  .sw input:checked+span{background:var(--ok)}.sw input:checked+span:after{left:21px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+  .chip{all:unset;cursor:pointer;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px 10px;font:12px Consolas,monospace}
+  .chip:hover{border-color:var(--accent)}
+  .btn{all:unset;cursor:pointer;background:var(--panel2);padding:8px 14px;border-radius:6px;border:1px solid var(--line)}
+  .btn:hover{border-color:var(--accent)}
+  .np{display:flex;gap:14px;align-items:center;padding:12px 0}
+  .np img{width:64px;height:64px;border-radius:8px;object-fit:cover;background:var(--bg)}
+  .np .t{font-weight:600;font-size:16px}
+  /* Discord-like preview */
+  .pv{background:#111214;border-radius:8px;padding:14px;font-size:14px}
+  .pv .hd{font-weight:600;font-size:12px;margin-bottom:10px;color:#fff}
+  .pv .bd{display:flex;gap:12px}
+  .pv .cv{width:82px;height:82px;border-radius:8px;background:#2b2d31;flex-shrink:0;position:relative;overflow:hidden;display:grid;place-items:center;color:var(--muted);font-size:11px;text-align:center}
+  .pv .cv img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+  .pv .sm{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:#2b2d31;border:3px solid #111214;overflow:hidden}
+  .pv .tx{min-width:0;flex:1}.pv .tx div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pv .d{font-weight:700;color:#fff}.pv .s,.pv .a{color:#dbdee1;font-size:13px}
+  .pv a{color:inherit;text-decoration:underline}
+  .pv .bar{display:flex;align-items:center;gap:8px;font-size:12px;margin-top:4px;color:#dbdee1}
+  .pv .bar i{flex:1;height:4px;background:#4e5058;border-radius:2px;position:relative}
+  .pv .bar b{position:absolute;left:0;top:0;bottom:0;background:#dbdee1;border-radius:2px}
+  .pv .bt{display:block;text-align:center;margin-top:8px;padding:7px;border-radius:4px;background:#4e5058;color:#fff;text-decoration:none;font-weight:500}
+  .note{font-size:12px;color:var(--muted);margin-top:8px}
+</style></head><body>
+<nav>
+  <div class="brand"><img src="../assets/icon.png" alt="">YM Presence</div>
+  <button data-t="home" class="on">Главная</button>
+  <button data-t="text">Тексты и ссылки</button>
+  <button data-t="images">Изображения</button>
+  <button data-t="buttons">Кнопки</button>
+  <button data-t="app">Приложение</button>
+  <div class="sp"></div>
+  <div class="conn"><span class="dot" id="dd"></span><span id="ds">Discord</span></div>
+</nav>
+<main>
+<div class="content">
+
+  <section class="tab on" id="t-home">
+    <h1>Главная</h1><div class="sub">Что сейчас видят друзья в Discord.</div>
+    <div class="card"><div class="row"><div class="l">Показывать статус в Discord<small>Главный выключатель</small></div>
+      <label class="sw"><input type="checkbox" data-k="enabled"><span></span></label></div></div>
+    <h2>Сейчас играет</h2>
+    <div class="card"><div class="np"><img id="npimg" alt=""><div><div class="t" id="nptitle">—</div><div class="muted" id="npartist" style="color:var(--muted)"></div></div></div></div>
+    <div class="note" id="dbg"></div>
+  </section>
+
+  <section class="tab" id="t-text">
+    <h1>Тексты и ссылки</h1><div class="sub">Любой текст можно сделать кликабельной ссылкой. Ссылка должна начинаться с http:// или https://.</div>
+    <div>Переменные (нажмите, чтобы вставить в выбранное поле):</div>
+    <div class="chips" id="chips"></div>
+    <h2>Основные строки</h2>
+    <div class="card" id="f-text"></div>
+    <h2>Заголовок статуса</h2>
+    <div class="card" id="f-name"></div>
+  </section>
+
+  <section class="tab" id="t-images">
+    <h1>Изображения</h1><div class="sub">Обложка, прогресс и маленькая иконка.</div>
+    <div class="card" id="f-img"></div>
+  </section>
+
+  <section class="tab" id="t-buttons">
+    <h1>Кнопки</h1><div class="sub">До двух кнопок под статусом. Другие пользователи видят их, вы на своём профиле — нет.</div>
+    <div class="card" id="f-btn0"></div><div class="card" id="f-btn1"></div>
+  </section>
+
+  <section class="tab" id="t-app">
+    <h1>Приложение</h1><div class="sub">Поведение программы на компьютере.</div>
+    <div class="card" id="f-app"></div>
+    <h2>Обновления</h2>
+    <div class="card" id="f-upd"></div>
+    <div class="card"><div class="row"><div class="l">Версия <span id="ver"></span><small id="updmsg"></small></div>
+      <button class="btn" id="chk">Проверить</button><button class="btn" id="inst" style="display:none">Перезапустить и обновить</button></div></div>
+    <button class="btn" id="reset">Сбросить все настройки</button>
+  </section>
+
+</div>
+<aside>
+  <h2 style="margin-top:0">Предпросмотр</h2>
+  <div class="pv" id="pv"></div>
+  <div class="note" id="pvnote"></div>
+</aside>
+</main>
+<script>
+let S, ST, focused = null, timer;
+const $ = (id) => document.getElementById(id);
+const get = (o, p) => p.split(".").reduce((a, k) => a?.[k], o);
+const set = (o, p, v) => { const ks = p.split("."); const l = ks.pop(); ks.reduce((a, k) => a[k], o)[l] = v; };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const save = () => { clearTimeout(timer); timer = setTimeout(() => api.set(S), 250); };
+
+function sw(k, label, hint) {
+  return `<div class="row"><div class="l">${label}${hint ? `<small>${hint}</small>` : ""}</div><label class="sw"><input type="checkbox" data-k="${k}"><span></span></label></div>`;
+}
+function tx(k, label, hint, ph) {
+  return `<div class="field"><label>${label}</label><input type="text" data-k="${k}" placeholder="${esc(ph || "")}">${hint ? `<small>${hint}</small>` : ""}</div>`;
+}
+function sel(k, label, hint, opts) {
+  return `<div class="field"><label>${label}</label><select data-k="${k}">${opts.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select>${hint ? `<small>${hint}</small>` : ""}</div>`;
+}
+
+function build() {
+  $("f-name").innerHTML =
+    tx("activityName", "Своё название активности", "Пусто — будет название приложения Discord («Yandex Music»). Иначе после «Слушает» покажется ваш текст.") +
+    sel("statusDisplay", "Что писать после «Слушает»", "Строка, которую Discord показывает в профиле и списке участников.", [["name", "Название активности"], ["state", "Вторую строку (исполнитель)"], ["details", "Первую строку (трек)"]]);
+  $("f-text").innerHTML =
+    tx("details", "Первая строка", "", "{title}") + tx("detailsUrl", "Ссылка на первой строке", "Пусто — просто текст. Например {url}", "https://…") +
+    tx("state", "Вторая строка", "", "{artist}") + tx("stateUrl", "Ссылка на второй строке", "Пусто — просто текст", "https://…") +
+    tx("largeText", "Третья строка (подпись обложки)", "", "{album}");
+  $("f-img").innerHTML =
+    sw("showCover", "Показывать обложку трека", "Если обложка не найдена — картинка-заглушка ниже") +
+    sw("uploadCovers", "Брать обложку из самой Яндекс Музыки", "Обложку, которую Яндекс Музыка отдаёт Windows, приложение временно (72 часа) выгружает на сторонний хостинг Litterbox: Discord принимает только ссылки. Передаётся только картинка обложки. Выключено — используются Яндекс API, Deezer и iTunes.") +
+    tx("fallbackImage", "Заглушка (ключ ассета или ссылка)", "Ключ из Discord Developer Portal → Rich Presence → Art Assets, например logo", "logo") +
+    tx("coverUrl", "Ссылка при нажатии на обложку", "Пусто — не кликабельна. Например {url}", "https://…") +
+    sw("showProgress", "Прогресс-бар и время", "") +
+    tx("smallImage", "Маленькая иконка (ключ ассета или ссылка)", "Круглая иконка в углу обложки. Пусто — не показывать", "") +
+    tx("smallText", "Подпись маленькой иконки", "", "");
+  for (const i of [0, 1])
+    $("f-btn" + i).innerHTML =
+      `<div class="row"><div class="l"><b>Кнопка ${i + 1}</b></div><label class="sw"><input type="checkbox" data-k="buttons.${i}.enabled"><span></span></label></div>` +
+      tx(`buttons.${i}.label`, "Текст кнопки", "До 32 символов", "Слушать на Яндекс Музыке") + tx(`buttons.${i}.url`, "Ссылка", "{url} — ссылка на трек в Яндекс Музыке", "https://…");
+  $("f-app").innerHTML =
+    sw("hideOnPause", "Скрывать статус на паузе", "") +
+    sw("autoStart", "Запускать вместе с Windows", "") +
+    sw("startMinimized", "Запускаться свёрнутым в трей", "Окно не открывается при старте") +
+    sw("closeToTray", "Крестик сворачивает в трей", "Иначе закрывает программу полностью");
+  $("f-upd").innerHTML =
+    sw("autoUpdate", "Проверять обновления автоматически", "При запуске и раз в 4 часа") +
+    `<div class="field"><label>Токен GitHub</label><input type="password" data-k="githubToken" placeholder="github_pat_…"><small>Репозиторий приватный, поэтому нужен токен только на чтение (fine-grained, право Contents: Read-only). Хранится только в файле настроек на этом компьютере.</small></div>`;
+  $("chips").innerHTML = ["title", "artist", "album", "url", "duration", "position"].map((v) => `<button class="chip" data-v="{${v}}">{${v}}</button>`).join("");
+
+  document.querySelectorAll("[data-k]").forEach((el) => {
+    el.addEventListener(el.type === "checkbox" || el.tagName === "SELECT" ? "change" : "input", () => {
+      set(S, el.dataset.k, el.type === "checkbox" ? el.checked : el.value);
+      save();
+    });
+    if (el.type === "text" || el.type === "password") el.addEventListener("focus", () => (focused = el));
+  });
+  document.querySelectorAll(".chip").forEach((c) => c.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    if (!focused) return;
+    const a = focused.selectionStart ?? focused.value.length, b = focused.selectionEnd ?? a;
+    focused.value = focused.value.slice(0, a) + c.dataset.v + focused.value.slice(b);
+    focused.setSelectionRange(a + c.dataset.v.length, a + c.dataset.v.length);
+    focused.dispatchEvent(new Event("input"));
+  }));
+  document.querySelectorAll("nav button[data-t]").forEach((b) => b.onclick = () => {
+    document.querySelectorAll("nav button[data-t]").forEach((x) => x.classList.toggle("on", x === b));
+    document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t.id === "t-" + b.dataset.t));
+  });
+  $("chk").onclick = () => api.checkUpdate();
+  $("inst").onclick = () => api.installUpdate();
+  $("reset").onclick = async () => { if (confirm("Сбросить все настройки?")) { await api.reset(); S = (await api.get()).settings; fillForm(); } };
+}
+
+function fillForm() {
+  document.querySelectorAll("[data-k]").forEach((el) => {
+    if (document.activeElement === el) return; // don't clobber what the user is typing
+    const v = get(S, el.dataset.k);
+    if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? "";
+  });
+}
+
+const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+const lnk = (t, u) => (u ? `<a href="${esc(u)}" target="_blank">${esc(t)}</a>` : esc(t));
+
+function render(st) {
+  ST = st;
+  const t = st.track;
+  const u = st.update;
+  $("ver").textContent = "v" + st.version;
+  $("updmsg").textContent = { idle: "", checking: "Проверяю…", none: "Установлена последняя версия", available: `Найдена версия ${u.version}, загружаю…`,
+    downloading: `Загрузка обновления: ${u.percent}%`, ready: `Версия ${u.version} загружена`, error: u.message }[u.kind] || "";
+  $("inst").style.display = u.kind === "ready" ? "" : "none";
+  $("chk").disabled = u.kind === "checking" || u.kind === "downloading";
+  $("dd").className = "dot" + (st.discord ? " on" : "");
+  $("ds").textContent = st.discord ? "Discord подключён" : "Discord не подключён";
+  $("nptitle").textContent = t ? t.title + (t.playing ? "" : " (пауза)") : "Ничего не играет";
+  $("npartist").textContent = t?.artist ?? "";
+  $("npimg").src = st.preview.info.cover || "";
+  $("npimg").style.visibility = st.preview.info.cover ? "visible" : "hidden";
+  $("dbg").textContent = t ? "" : "Медиа-сессии Windows: " + (st.sessions.join(", ") || "нет") + ". Включите трек в Яндекс Музыке.";
+
+  const p = st.preview, a = p.activity;
+  const head = { name: a.name || "Yandex Music", state: a.state, details: a.details }[st.settings.statusDisplay] || "Yandex Music";
+  const big = a.largeImageKey && /^https?:/.test(a.largeImageKey)
+    ? `<img src="${esc(a.largeImageKey)}" alt="">` : a.largeImageKey ? `ассет «${esc(a.largeImageKey)}»` : "нет";
+  const small = a.smallImageKey ? `<div class="sm">${/^https?:/.test(a.smallImageKey) ? `<img src="${esc(a.smallImageKey)}" style="width:100%;height:100%">` : ""}</div>` : "";
+  const prog = a.endTimestamp && p.track.duration
+    ? `<div class="bar">${mmss(p.track.position)}<i><b style="width:${Math.min(100, p.track.position / p.track.duration * 100)}%"></b></i>${mmss(p.track.duration)}</div>` : "";
+  $("pv").innerHTML =
+    `<div class="hd">Слушает ${esc(head)}</div><div class="bd"><div class="cv">${big}${small}</div><div class="tx">` +
+    (a.details ? `<div class="d">${lnk(a.details, a.detailsUrl)}</div>` : "") +
+    (a.state ? `<div class="s">${lnk(a.state, a.stateUrl)}</div>` : "") +
+    (a.largeImageText ? `<div class="a">${lnk(a.largeImageText, a.largeImageUrl)}</div>` : "") + prog + `</div></div>` +
+    (a.buttons || []).map((b) => `<a class="bt" href="${esc(b.url)}" target="_blank">${esc(b.label)}</a>`).join("");
+  $("pvnote").textContent = p.sample ? "Пример: сейчас ничего не играет. Включите трек, чтобы увидеть реальные данные." : "";
+}
+
+(async () => {
+  build();
+  const st = await api.get();
+  S = st.settings; fillForm(); render(st);
+  api.onState((s) => render(s)); // S stays local so in-flight edits are never overwritten
+})();
+</script></body></html>
