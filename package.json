@@ -36,6 +36,7 @@
       "scripts/smtc.ps1"
     ],
     "afterPack": "scripts/after-pack.js",
+    "publish": { "provider": "github", "owner": "sxcvio", "repo": "ym-presence", "private": true, "releaseType": "draft" },
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico",
